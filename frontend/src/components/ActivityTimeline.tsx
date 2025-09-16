@@ -38,18 +38,51 @@ export function ActivityTimeline({
     if (index === 0 && isLoading && processedEvents.length === 0) {
       return <Loader2 className="h-4 w-4 text-neutral-400 animate-spin" />;
     }
-    if (title.toLowerCase().includes("generating")) {
+    
+    const lowerTitle = title.toLowerCase();
+    
+    // Enhanced multi-agent system icons
+    if (lowerTitle.includes("📋") || lowerTitle.includes("planning")) {
+      return <span className="text-blue-400 text-sm">📋</span>;
+    } else if (lowerTitle.includes("🔍") || lowerTitle.includes("parallel research")) {
+      return <span className="text-green-400 text-sm">🔍</span>;
+    } else if (lowerTitle.includes("📊") || lowerTitle.includes("aggregation")) {
+      return <span className="text-yellow-400 text-sm">📊</span>;
+    } else if (lowerTitle.includes("📝") || lowerTitle.includes("synthesis")) {
+      return <span className="text-purple-400 text-sm">📝</span>;
+    } else if (lowerTitle.includes("🔎") || lowerTitle.includes("quality review")) {
+      return <span className="text-orange-400 text-sm">🔎</span>;
+    } else if (lowerTitle.includes("✏️") || lowerTitle.includes("revision")) {
+      return <span className="text-cyan-400 text-sm">✏️</span>;
+    } else if (lowerTitle.includes("✨") || lowerTitle.includes("final polish")) {
+      return <span className="text-emerald-400 text-sm">✨</span>;
+    }
+    
+    // Legacy system icons
+    else if (lowerTitle.includes("generating")) {
       return <TextSearch className="h-4 w-4 text-neutral-400" />;
-    } else if (title.toLowerCase().includes("thinking")) {
+    } else if (lowerTitle.includes("thinking")) {
       return <Loader2 className="h-4 w-4 text-neutral-400 animate-spin" />;
-    } else if (title.toLowerCase().includes("reflection")) {
+    } else if (lowerTitle.includes("reflection")) {
       return <Brain className="h-4 w-4 text-neutral-400" />;
-    } else if (title.toLowerCase().includes("research")) {
+    } else if (lowerTitle.includes("research")) {
       return <Search className="h-4 w-4 text-neutral-400" />;
-    } else if (title.toLowerCase().includes("finalizing")) {
+    } else if (lowerTitle.includes("finalizing")) {
       return <Pen className="h-4 w-4 text-neutral-400" />;
     }
+    
     return <Activity className="h-4 w-4 text-neutral-400" />;
+  };
+
+  const getEventStatus = (title: string, index: number) => {
+    const isLastEvent = index === processedEvents.length - 1;
+    const isCompleted = !isLoading || !isLastEvent;
+    
+    if (isCompleted) {
+      return "bg-green-600 ring-green-600/30";
+    } else {
+      return "bg-blue-600 ring-blue-600/30 animate-pulse";
+    }
   };
 
   useEffect(() => {
@@ -93,29 +126,46 @@ export function ActivityTimeline({
             )}
             {processedEvents.length > 0 ? (
               <div className="space-y-0">
-                {processedEvents.map((eventItem, index) => (
-                  <div key={index} className="relative pl-8 pb-4">
-                    {index < processedEvents.length - 1 ||
-                    (isLoading && index === processedEvents.length - 1) ? (
-                      <div className="absolute left-3 top-3.5 h-full w-0.5 bg-neutral-600" />
-                    ) : null}
-                    <div className="absolute left-0.5 top-2 h-6 w-6 rounded-full bg-neutral-600 flex items-center justify-center ring-4 ring-neutral-700">
-                      {getEventIcon(eventItem.title, index)}
+                {processedEvents.map((eventItem, index) => {
+                  const isLastEvent = index === processedEvents.length - 1;
+                  const isCompleted = !isLoading || !isLastEvent;
+                  
+                  return (
+                    <div key={index} className="relative pl-8 pb-4">
+                      {index < processedEvents.length - 1 ||
+                      (isLoading && index === processedEvents.length - 1) ? (
+                        <div className={`absolute left-3 top-3.5 h-full w-0.5 ${isCompleted ? 'bg-green-600/50' : 'bg-neutral-600'}`} />
+                      ) : null}
+                      <div className={`absolute left-0.5 top-2 h-6 w-6 rounded-full flex items-center justify-center ring-4 ${getEventStatus(eventItem.title, index)} ring-neutral-700`}>
+                        {getEventIcon(eventItem.title, index)}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className={`text-sm font-medium ${isCompleted ? 'text-green-200' : 'text-blue-200'}`}>
+                            {eventItem.title}
+                          </p>
+                          {isCompleted && (
+                            <span className="px-1.5 py-0.5 bg-green-600/20 text-green-400 text-xs rounded-full">
+                              ✓
+                            </span>
+                          )}
+                          {!isCompleted && isLastEvent && isLoading && (
+                            <span className="px-1.5 py-0.5 bg-blue-600/20 text-blue-400 text-xs rounded-full animate-pulse">
+                              In Progress
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-neutral-300 leading-relaxed">
+                          {typeof eventItem.data === "string"
+                            ? eventItem.data
+                            : Array.isArray(eventItem.data)
+                            ? (eventItem.data as string[]).join(", ")
+                            : JSON.stringify(eventItem.data)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-neutral-200 font-medium mb-0.5">
-                        {eventItem.title}
-                      </p>
-                      <p className="text-xs text-neutral-300 leading-relaxed">
-                        {typeof eventItem.data === "string"
-                          ? eventItem.data
-                          : Array.isArray(eventItem.data)
-                          ? (eventItem.data as string[]).join(", ")
-                          : JSON.stringify(eventItem.data)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {isLoading && processedEvents.length > 0 && (
                   <div className="relative pl-8 pb-4">
                     <div className="absolute left-0.5 top-2 h-5 w-5 rounded-full bg-neutral-600 flex items-center justify-center ring-4 ring-neutral-700">

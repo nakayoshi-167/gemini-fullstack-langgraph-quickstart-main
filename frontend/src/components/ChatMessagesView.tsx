@@ -186,8 +186,12 @@ const AiMessageBubble: React.FC<AiMessageBubbleProps> = ({
     isLastMessage && isOverallLoading ? liveActivity : historicalActivity;
   const isLiveActivityForThisBubble = isLastMessage && isOverallLoading;
 
+  // Check if this is a completed research result
+  const isCompletedResearch = !isOverallLoading && message.content && 
+    typeof message.content === 'string' && message.content.length > 100;
+
   return (
-    <div className={`relative break-words flex flex-col`}>
+    <div className={`relative break-words flex flex-col ${isCompletedResearch ? 'mb-8 pb-6 border-b-2 border-green-600/30' : ''}`}>
       {activityForThisBubble && activityForThisBubble.length > 0 && (
         <div className="mb-3 border-b border-neutral-700 pb-3 text-xs">
           <ActivityTimeline
@@ -196,28 +200,52 @@ const AiMessageBubble: React.FC<AiMessageBubbleProps> = ({
           />
         </div>
       )}
+      
+      {/* Research Result Header for completed reports */}
+      {isCompletedResearch && (
+        <div className="mb-4 flex items-center gap-2 text-green-400 text-sm font-medium">
+          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+          <span>Research Complete</span>
+        </div>
+      )}
+      
       <ReactMarkdown components={mdComponents}>
         {typeof message.content === "string"
           ? message.content
           : JSON.stringify(message.content)}
       </ReactMarkdown>
-      <Button
-        variant="default"
-        className={`cursor-pointer bg-neutral-700 border-neutral-600 text-neutral-300 self-end ${
-          message.content.length > 0 ? "visible" : "hidden"
-        }`}
-        onClick={() =>
-          handleCopy(
-            typeof message.content === "string"
-              ? message.content
-              : JSON.stringify(message.content),
-            message.id!
-          )
-        }
-      >
-        {copiedMessageId === message.id ? "Copied" : "Copy"}
-        {copiedMessageId === message.id ? <CopyCheck /> : <Copy />}
-      </Button>
+      
+      {/* Copy button positioned appropriately */}
+      <div className="flex justify-end mt-3">
+        <Button
+          variant="default"
+          size="sm"
+          className={`cursor-pointer bg-neutral-700 border-neutral-600 text-neutral-300 hover:bg-neutral-600 ${
+            message.content.length > 0 ? "visible" : "hidden"
+          }`}
+          onClick={() =>
+            handleCopy(
+              typeof message.content === "string"
+                ? message.content
+                : JSON.stringify(message.content),
+              message.id!
+            )
+          }
+        >
+          {copiedMessageId === message.id ? "Copied" : "Copy"}
+          {copiedMessageId === message.id ? <CopyCheck className="ml-1 h-3 w-3" /> : <Copy className="ml-1 h-3 w-3" />}
+        </Button>
+      </div>
+      
+      {/* Completion indicator for finished research */}
+      {isCompletedResearch && (
+        <div className="mt-4 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600/20 text-green-400 rounded-full text-xs">
+            <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+            <span>Research Ready for Review</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
